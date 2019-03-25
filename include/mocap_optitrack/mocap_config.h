@@ -58,21 +58,6 @@ struct ServerDescription
   std::vector<int> version;
 };
 
-/// \brief ROS publisher configuration
-struct PublisherConfiguration
-{
-  int rigidBodyId;
-  std::string poseTopicName;
-  std::string pose2dTopicName;
-  std::string childFrameId;
-  std::string parentFrameId;
-
-  bool publishPose;
-  bool publishPose2d;
-  bool publishTf;
-};
-
-typedef std::vector<PublisherConfiguration> PublisherConfigurations;
 
 } // namespace
 

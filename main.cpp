@@ -15,9 +15,6 @@ int main(int argc, char **argv) {
     std::cout << "Hello, world!" << std::endl;
     
     mocap_optitrack::ServerDescription serverDescription;
-    serverDescription.dataPort = 9000;
-    serverDescription.commandPort = 1510;
-    serverDescription.multicastIpAddress = "224.0.0.1";
     
     mocap_optitrack::DataModel dataModel;
     std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
