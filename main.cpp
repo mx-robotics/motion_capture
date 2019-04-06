@@ -7,53 +7,67 @@
 
 
 
-int main(int argc, char **argv) {
-    
-    
+int main ( int argc, char **argv ) {
 
-    
+
+
+
     std::cout << "Hello, world!" << std::endl;
-    
+
     mocap_optitrack::ServerDescription serverDescription;
-    
+
     mocap_optitrack::DataModel dataModel;
     std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
-    
-    
-      // Create socket
-      multicastClientSocketPtr.reset( new UdpMulticastSocket(serverDescription.dataPort, serverDescription.multicastIpAddress) ); 
 
-      if (!serverDescription.version.empty())
-      {
-        dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
-      }
 
-      // Need verion information from the server to properly decode any of their packets.
-      // If we have not recieved that yet, send another request.  
-      while(!dataModel.hasServerInfo())
-      {
+    // Create socket
+    multicastClientSocketPtr.reset ( new UdpMulticastSocket ( serverDescription.dataPort, serverDescription.multicastIpAddress ) );
+
+    if ( !serverDescription.version.empty() ) {
+        dataModel.setVersions ( &serverDescription.version[0], &serverDescription.version[0] );
+    }
+
+    // Need verion information from the server to properly decode any of their packets.
+    // If we have not recieved that yet, send another request.
+    while ( !dataModel.hasServerInfo() ) {
         natnet::ConnectionRequestMessage connectionRequestMsg;
         natnet::MessageBuffer connectionRequestMsgBuffer;
-        connectionRequestMsg.serialize(connectionRequestMsgBuffer, NULL);
-        
-        int ret = multicastClientSocketPtr->send(&connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), serverDescription.commandPort);
+        connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
 
-            
+        int ret = multicastClientSocketPtr->send ( &connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), serverDescription.commandPort );
+
+
         int numBytesReceived = multicastClientSocketPtr->recv();
-        if( numBytesReceived > 0 )
-        {
+        if ( numBytesReceived > 0 ) {
             // Grab latest message buffer
             const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
 
             // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            natnet::MessageBuffer msgBuffer(pMsgBuffer, pMsgBuffer + numBytesReceived);
-            natnet::MessageDispatcher::dispatch(msgBuffer, &dataModel);
-        
-            usleep(10);
-        }
-      }
+            natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
 
-      DSA_INFO("Initialization complete");
-    
+            usleep ( 10 );
+        }
+    }
+
+    DSA_INFO ( "Initialization complete" );
+
+
+
+    while ( true ) {
+        // Get data from mocap server
+        int numBytesReceived = multicastClientSocketPtr->recv();
+        if ( numBytesReceived > 0 ) {
+            DSA_INFO ( "package received" );
+            // Grab latest message buffer
+            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
+
+            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
+            natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
+        }
+    }
+
+
     return 0;
 }
