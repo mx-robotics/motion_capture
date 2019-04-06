@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019, Markus Bader
  * Copyright (c) 2011 University of Bonn, Computer Science Institute,
  * Kathrin Gräve
  * All rights reserved.

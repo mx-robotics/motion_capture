@@ -1,4 +1,5 @@
 # Optitrack
+This is a simple program based on the 
 ## Setup
 ### Motive (server)
 - View -> Data Streaming

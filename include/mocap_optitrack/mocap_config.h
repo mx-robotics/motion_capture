@@ -1,4 +1,5 @@
 /* 
+ * Copyright (c) 2019, Markus Bader
  * Copyright (c) 2018, Houston Mechatronics Inc., JD Yamokoski
  * Copyright (c) 2012, Clearpath Robotics, Inc., Alex Bencz
  * All rights reserved.
