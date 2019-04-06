@@ -33,8 +33,50 @@
 #include <mocap_optitrack/data_model.h>
 #include "mocap_optitrack/mocap_config.h"
 
+
 namespace natnet
 {
+    static const unsigned int NATNET_MAX_NAMELENGTH = 256;
+    static const unsigned int NATNET_MAX_PACKETSIZE = 100000; // max size of packet (actual packet size is dynamic)
+    
+    enum MessageType
+    {
+        Connect             = 0,
+        ServerInfo          = 1,
+        Request             = 2,
+        Response            = 3,
+        RequestModelDef     = 4,
+        ModelDef            = 5,
+        RequestFrameOfData  = 6,
+        FrameOfData         = 7,
+        MessageString       = 8,
+        UnrecognizedRequest = 100,
+        Undefined           = 999999
+    };
+
+    // Sender definition
+    typedef struct 
+    {
+        char name[NATNET_MAX_NAMELENGTH];            // sending app's name
+        unsigned char version[4];             // sending app's version [major.minor.build.revision]
+        unsigned char natNetVersion[4];       // sending app's NatNet version [major.minor.build.revision]
+    } __attribute__ ((__packed__)) Sender;
+    
+    // Packet definition
+    typedef struct
+    {
+        unsigned short messageId;               // message ID (e.g. NAT_FRAMEOFDATA)
+        unsigned short numDataBytes;            // Num bytes in payload
+        union
+        {
+        unsigned char  cData[NATNET_MAX_PACKETSIZE];
+        char           szData[NATNET_MAX_PACKETSIZE];
+        unsigned long  lData[NATNET_MAX_PACKETSIZE/4];
+        float          fData[NATNET_MAX_PACKETSIZE/4];
+        Sender         sender;
+        } data;                                 // Payload incoming from NatNet Server
+    } __attribute__ ((__packed__)) Packet;
+  
     typedef std::vector<char> MessageBuffer;
 
     struct MessageInterface
@@ -57,9 +99,7 @@ namespace natnet
     {
         struct RigidBodyMessagePart
         {
-            void deserialize(MessageBuffer::const_iterator&, 
-                mocap_optitrack::RigidBody&,
-                mocap_optitrack::Version const&);
+            void deserialize(MessageBuffer::const_iterator&,  mocap_optitrack::RigidBody&, mocap_optitrack::Version const&);
         };
 
     public:

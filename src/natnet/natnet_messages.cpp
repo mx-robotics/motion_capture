@@ -31,8 +31,6 @@
 #include <cstring>
 #include <cinttypes>
 
-#include "natnet/natnet_packet_definition.h"
-
 namespace natnet {
 
 namespace utilities {
