@@ -31,7 +31,7 @@
 
 #include <vector>
 #include <mocap_optitrack/data_model.h>
-#include "mocap_optitrack/dsa_log.h"
+#include "mocap_optitrack/mocap_config.h"
 
 namespace natnet
 {

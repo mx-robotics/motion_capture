@@ -34,16 +34,25 @@
 #include <string>
 
 
-#define DSA_WARN( ...) printf( __VA_ARGS__)
-#define DSA_DEBUG( ...) printf( __VA_ARGS__)
-#define DSA_INFO_ONCE( ...) printf( __VA_ARGS__)
+#define DSA_WARN(...) printf(__VA_ARGS__); printf("\n")
+#define DSA_INFO(...) printf(__VA_ARGS__); printf("\n")
+#define DSA_DEBUG(...) printf(__VA_ARGS__); printf("\n")
+#define DSA_INFO_ONCE(...) printf(__VA_ARGS__); printf("\n")
 
 namespace mocap_optitrack
 {
 
 /// \brief Server communication info
-struct ServerDescription
+class ServerDescription
 {
+  public:
+    
+    ServerDescription() 
+    : commandPort(1510)
+    , dataPort(9000)
+    , multicastIpAddress("224.0.0.1")
+    {}
+    
   struct Default
   {
     static const int CommandPort;
@@ -51,7 +60,6 @@ struct ServerDescription
     static const std::string MulticastIpAddress;
   };
 
-  ServerDescription();
   int commandPort;
   int dataPort;
   std::string multicastIpAddress;

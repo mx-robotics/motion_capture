@@ -9,9 +9,6 @@
 
 int main ( int argc, char **argv ) {
 
-
-
-
     std::cout << "Hello, world!" << std::endl;
 
     mocap_optitrack::ServerDescription serverDescription;
@@ -51,8 +48,6 @@ int main ( int argc, char **argv ) {
     }
 
     DSA_INFO ( "Initialization complete" );
-
-
 
     while ( true ) {
         // Get data from mocap server
