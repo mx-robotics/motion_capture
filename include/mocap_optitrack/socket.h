@@ -39,7 +39,6 @@
 #include <string>
 #include <arpa/inet.h>
 #include <stdexcept>
-#include "mocap_optitrack/mocap_config.h"
 
 
 /// \brief Exception class thrown by socket classes in this file.

@@ -30,10 +30,10 @@
 #include <iostream>
 #include <memory>
 #include <mocap_optitrack/data_model.h>
-#include <mocap_optitrack/mocap_config.h>
 #include <mocap_optitrack/socket.h>
 #include <natnet/natnet_messages.h>
 
+#define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
 
 int main ( int argc, char **argv ) {
 
@@ -75,13 +75,13 @@ int main ( int argc, char **argv ) {
         }
     }
 
-    DSA_INFO ( "Initialization complete" );
+    PRINT_INFO ( "Initialization complete" );
 
     while ( true ) {
         // Get data from mocap server
         int numBytesReceived = multicastClientSocketPtr->recv();
         if ( numBytesReceived > 0 ) {
-            DSA_INFO ( "package received" );
+            PRINT_INFO ( "package received" );
             // Grab latest message buffer
             const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
 

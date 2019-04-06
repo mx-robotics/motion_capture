@@ -37,6 +37,30 @@
 namespace mocap_optitrack
 {
 
+/// \brief Server communication info
+class ServerDescription
+{
+  public:
+    
+    ServerDescription() 
+    : commandPort(1510)
+    , dataPort(9000)
+    , multicastIpAddress("224.0.0.1")
+    {}
+    
+  struct Default
+  {
+    static const int CommandPort;
+    static const int DataPort;
+    static const std::string MulticastIpAddress;
+  };
+
+  int commandPort;
+  int dataPort;
+  std::string multicastIpAddress;
+  std::vector<int> version;
+};
+
 /// \breif Version class containing the version information and helpers for comparison.
 class Version
 {

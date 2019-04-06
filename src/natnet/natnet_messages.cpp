@@ -32,6 +32,10 @@
 #include <cstring>
 #include <cinttypes>
 
+
+#define MOCAP_NATNET_INFO(...) printf(__VA_ARGS__); printf("\n")
+#define MOCAP_NATNET_WARN(...) printf(__VA_ARGS__); printf("\n")
+
 namespace natnet {
 
 namespace utilities {
@@ -48,7 +52,7 @@ void read_and_seek ( MessageBuffer::const_iterator& iter, T& target ) {
     //    *((T const*) pData) <- dereference typed pointer and copy it into target
     char const* pData = & ( *iter );
     target = * ( ( T const* ) pData );
-    // DSA_DEBUG("\t sizeof(%s) = %d", TypeParseTraits<T>::name, (int)sizeof(T));
+    // MOCAP_NATNET_INFO("\t sizeof(%s) = %d", TypeParseTraits<T>::name, (int)sizeof(T));
     seek ( iter, sizeof ( T ) );
 }
 
@@ -126,8 +130,8 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
     utilities::read_and_seek ( msgBufferIter, rigidBody.bodyId );
     utilities::read_and_seek ( msgBufferIter, rigidBody.pose );
 
-    DSA_DEBUG ( "  Rigid body ID: %d", rigidBody.bodyId );
-    DSA_DEBUG ( "    Pos: [%3.2f,%3.2f,%3.2f], Ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
+    MOCAP_NATNET_INFO ( "  Rigid body ID: %d", rigidBody.bodyId );
+    MOCAP_NATNET_INFO ( "    Pos: [%3.2f,%3.2f,%3.2f], Ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
                 rigidBody.pose.position.x,
                 rigidBody.pose.position.y,
                 rigidBody.pose.position.z,
@@ -140,7 +144,7 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
     if ( ( true ) && ( natNetVersion >= mocap_optitrack::Version ( "2.0" ) ) ) {
         // Mean marker error
         utilities::read_and_seek ( msgBufferIter, rigidBody.meanMarkerError );
-        DSA_DEBUG ( "    Mean marker error: %3.2f", rigidBody.meanMarkerError );
+        MOCAP_NATNET_INFO ( "    Mean marker error: %3.2f", rigidBody.meanMarkerError );
     }
 
     // NatNet version 2.6 and later
@@ -149,7 +153,7 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
         short params = 0;
         utilities::read_and_seek ( msgBufferIter, params );
         rigidBody.isTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
-        DSA_DEBUG ( "    Successfully tracked in this frame: %s",
+        MOCAP_NATNET_INFO ( "    Successfully tracked in this frame: %s",
                     ( rigidBody.isTrackingValid ? "YES" : "NO" ) );
     }
     utilities::seek ( msgBufferIter, sizeof ( float ) );
@@ -165,8 +169,8 @@ void DataFrameMessage::deserialize (
 
     // Next 4 bytes is the frame number
     utilities::read_and_seek ( msgBufferIter, dataModel->frameNumber );
-    DSA_DEBUG ( "=== BEGIN DATA FRAME ===" );
-    DSA_DEBUG ( "Frame number: %d", dataModel->frameNumber );
+    MOCAP_NATNET_INFO ( "=== BEGIN DATA FRAME ===" );
+    MOCAP_NATNET_INFO ( "Frame number: %d", dataModel->frameNumber );
 
     // Here on out its conveinent to get a pointer directly
     // to the ModelFrame object as well as the NatNetVersion
@@ -176,8 +180,8 @@ void DataFrameMessage::deserialize (
     // Next 4 bytes is the number of data sets (markersets, rigidbodies, etc)
     int numMarkerSets = 0;
     utilities::read_and_seek ( msgBufferIter, numMarkerSets );
-    DSA_DEBUG ( "*** MARKER SETS ***" );
-    DSA_DEBUG ( "Marker set count: %d", numMarkerSets );
+    MOCAP_NATNET_INFO ( "*** MARKER SETS ***" );
+    MOCAP_NATNET_INFO ( "Marker set count: %d", numMarkerSets );
     dataFrame->markerSets.resize ( numMarkerSets );
 
     // Loop through number of marker sets and get name and data
@@ -187,46 +191,46 @@ void DataFrameMessage::deserialize (
         // Markerset name
         strcpy ( markerSet.name, & ( *msgBufferIter ) );
         utilities::seek ( msgBufferIter, strlen ( markerSet.name ) + 1 );
-        DSA_DEBUG ( "  Marker set %d: %s", icnt++, markerSet.name );
+        MOCAP_NATNET_INFO ( "  Marker set %d: %s", icnt++, markerSet.name );
 
         // Read number of markers that belong to the model
         int numMarkers = 0;
         utilities::read_and_seek ( msgBufferIter, numMarkers );
         markerSet.markers.resize ( numMarkers );
-        DSA_DEBUG ( "  Number of markers: %d", numMarkers );
+        MOCAP_NATNET_INFO ( "  Number of markers: %d", numMarkers );
 
         int jcnt = 0;
         for ( auto& marker : markerSet.markers ) {
             // read marker positions
             utilities::read_and_seek ( msgBufferIter, marker );
-            DSA_DEBUG ( "    Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
+            MOCAP_NATNET_INFO ( "    Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
                         jcnt++, marker.x, marker.y, marker.z );
         }
     }
 
     // Loop through unlabeled markers
-    DSA_DEBUG ( "*** UNLABELED MARKERS (Deprecated) ***" );
+    MOCAP_NATNET_INFO ( "*** UNLABELED MARKERS (Deprecated) ***" );
     int numUnlabeledMarkers = 0;
     utilities::read_and_seek ( msgBufferIter, numUnlabeledMarkers );
     dataFrame->otherMarkers.resize ( numUnlabeledMarkers );
-    DSA_DEBUG ( "Unlabled marker count: %d", numUnlabeledMarkers );
+    MOCAP_NATNET_INFO ( "Unlabled marker count: %d", numUnlabeledMarkers );
 
     // Loop over unlabled markers
     icnt = 0;
     for ( auto& marker : dataFrame->otherMarkers ) {
         // read positions of 'other' markers
         utilities::read_and_seek ( msgBufferIter, marker );
-        DSA_DEBUG ( "  Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
+        MOCAP_NATNET_INFO ( "  Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
                     icnt++, marker.x, marker.y, marker.z );
         // Deprecated
     }
 
     // Loop through rigidbodies
-    DSA_DEBUG ( "*** RIGID BODIES ***" );
+    MOCAP_NATNET_INFO ( "*** RIGID BODIES ***" );
     int numRigidBodies = 0;
     utilities::read_and_seek ( msgBufferIter, numRigidBodies );
     dataFrame->rigidBodies.resize ( numRigidBodies );
-    DSA_DEBUG ( "Rigid count: %d", numRigidBodies );
+    MOCAP_NATNET_INFO ( "Rigid count: %d", numRigidBodies );
 
     // Loop over rigid bodies
     for ( auto& rigidBody : dataFrame->rigidBodies ) {
@@ -238,22 +242,22 @@ void DataFrameMessage::deserialize (
     // TODO: skeletons not currently included in data model. Parsing
     //       is happening.. but need to copy into a model.
     if ( ( false ) & ( NatNetVersion >= mocap_optitrack::Version ( "2.1" ) ) ) {
-        DSA_DEBUG ( "*** SKELETONS ***" );
+        MOCAP_NATNET_INFO ( "*** SKELETONS ***" );
         int numSkeletons = 0;
         utilities::read_and_seek ( msgBufferIter, numSkeletons );
-        DSA_DEBUG ( "Skeleton count: %d", numSkeletons );
+        MOCAP_NATNET_INFO ( "Skeleton count: %d", numSkeletons );
 
         // Loop through skeletons
         for ( int j=0; j < numSkeletons; j++ ) {
             // skeleton id
             int skeletonId = 0;
             utilities::read_and_seek ( msgBufferIter, skeletonId );
-            DSA_DEBUG ( "Skeleton ID: %d", skeletonId );
+            MOCAP_NATNET_INFO ( "Skeleton ID: %d", skeletonId );
 
             // Number of rigid bodies (bones) in skeleton
             int numRigidBodies = 0;
             utilities::read_and_seek ( msgBufferIter, numRigidBodies );
-            DSA_DEBUG ( "Rigid body count: %d", numRigidBodies );
+            MOCAP_NATNET_INFO ( "Rigid body count: %d", numRigidBodies );
 
             // Loop through rigid bodies (bones) in skeleton
             for ( int j=0; j < numRigidBodies; j++ ) {
@@ -268,10 +272,10 @@ void DataFrameMessage::deserialize (
     // TODO: like skeletons, labeled markers are not accounted for
     //       in the data model. They are being parsed but not recorded.
     if ( NatNetVersion >= mocap_optitrack::Version ( "2.3" ) ) {
-        DSA_DEBUG ( "*** LABELED MARKERS ***" );
+        MOCAP_NATNET_INFO ( "*** LABELED MARKERS ***" );
         int numLabeledMarkers = 0;
         utilities::read_and_seek ( msgBufferIter, numLabeledMarkers );
-        DSA_DEBUG ( "Labeled marker count: %d", numLabeledMarkers );
+        MOCAP_NATNET_INFO ( "Labeled marker count: %d", numLabeledMarkers );
 
         // Loop through labeled markers
         for ( int j=0; j < numLabeledMarkers; j++ ) {
@@ -306,17 +310,17 @@ void DataFrameMessage::deserialize (
                 }
             }
 
-            DSA_DEBUG ( "  MarkerID: %d, ModelID: %d", markerId, modelId );
-            DSA_DEBUG ( "    Pos: [%3.2f,%3.2f,%3.2f]",
+            MOCAP_NATNET_INFO ( "  MarkerID: %d, ModelID: %d", markerId, modelId );
+            MOCAP_NATNET_INFO ( "    Pos: [%3.2f,%3.2f,%3.2f]",
                         marker.x, marker.y, marker.z );
-            DSA_DEBUG ( "    Size: %3.2f", size );
+            MOCAP_NATNET_INFO ( "    Size: %3.2f", size );
 
             // NatNet version 3.0 and later
             if ( NatNetVersion >= mocap_optitrack::Version ( "3.0" ) ) {
                 // Marker residual
                 float residual = 0.0f;
                 utilities::read_and_seek ( msgBufferIter, residual );
-                DSA_DEBUG ( "    Residual:  %3.2f", residual );
+                MOCAP_NATNET_INFO ( "    Residual:  %3.2f", residual );
             }
         }
     }
@@ -324,30 +328,30 @@ void DataFrameMessage::deserialize (
     // Force Plate data (NatNet version 2.9 and later)
     // TODO: This is definitely not in the data model..
     if ( NatNetVersion >= mocap_optitrack::Version ( "2.9" ) ) {
-        DSA_DEBUG ( "*** FORCE PLATES ***" );
+        MOCAP_NATNET_INFO ( "*** FORCE PLATES ***" );
         int numForcePlates;
         utilities::read_and_seek ( msgBufferIter, numForcePlates );
-        DSA_DEBUG ( "Force plate count: %d", numForcePlates );
+        MOCAP_NATNET_INFO ( "Force plate count: %d", numForcePlates );
         for ( int iForcePlate = 0; iForcePlate < numForcePlates; iForcePlate++ ) {
             // ID
             int forcePlateId = 0;
             utilities::read_and_seek ( msgBufferIter, forcePlateId );
-            DSA_DEBUG ( "Force plate ID: %d", forcePlateId );
+            MOCAP_NATNET_INFO ( "Force plate ID: %d", forcePlateId );
 
             // Channel Count
             int numChannels = 0;
             utilities::read_and_seek ( msgBufferIter, numChannels );
-            DSA_DEBUG ( "  Number of channels: %d", numChannels );
+            MOCAP_NATNET_INFO ( "  Number of channels: %d", numChannels );
 
             // Channel Data
             for ( int i = 0; i < numChannels; i++ ) {
-                DSA_DEBUG ( "    Channel %d: ", i );
+                MOCAP_NATNET_INFO ( "    Channel %d: ", i );
                 int numFrames = 0;
                 utilities::read_and_seek ( msgBufferIter, numFrames );
                 for ( int j = 0; j < numFrames; j++ ) {
                     float val = 0.0f;
                     utilities::read_and_seek ( msgBufferIter, val );
-                    DSA_DEBUG ( "      Frame %d: %3.2f", j, val );
+                    MOCAP_NATNET_INFO ( "      Frame %d: %3.2f", j, val );
                 }
             }
         }
@@ -356,16 +360,16 @@ void DataFrameMessage::deserialize (
     // Device data (NatNet version 3.0 and later)
     // TODO: Also not in the data model..
     if ( NatNetVersion >= mocap_optitrack::Version ( "3.0" ) ) {
-        DSA_DEBUG ( "*** DEVICE DATA ***" );
+        MOCAP_NATNET_INFO ( "*** DEVICE DATA ***" );
         int numDevices;
         utilities::read_and_seek ( msgBufferIter, numDevices );
-        DSA_DEBUG ( "Device count: %d", numDevices );
+        MOCAP_NATNET_INFO ( "Device count: %d", numDevices );
 
         for ( int iDevice = 0; iDevice < numDevices; iDevice++ ) {
             // ID
             int deviceId = 0;
             utilities::read_and_seek ( msgBufferIter, deviceId );
-            DSA_DEBUG ( "  Device ID: %d", deviceId );
+            MOCAP_NATNET_INFO ( "  Device ID: %d", deviceId );
 
             // Channel Count
             int numChannels = 0;
@@ -373,23 +377,23 @@ void DataFrameMessage::deserialize (
 
             // Channel Data
             for ( int i = 0; i < numChannels; i++ ) {
-                DSA_DEBUG ( "    Channel %d: ", i );
+                MOCAP_NATNET_INFO ( "    Channel %d: ", i );
                 int nFrames = 0;
                 utilities::read_and_seek ( msgBufferIter, nFrames );
                 for ( int j = 0; j < nFrames; j++ ) {
                     float val = 0.0f;
                     utilities::read_and_seek ( msgBufferIter, val );
-                    DSA_DEBUG ( "      Frame %d: %3.2f", j, val );
+                    MOCAP_NATNET_INFO ( "      Frame %d: %3.2f", j, val );
                 }
             }
         }
     }
 
     // software latency (removed in version 3.0)
-    DSA_DEBUG ( "*** DIAGNOSTICS ***" );
+    MOCAP_NATNET_INFO ( "*** DIAGNOSTICS ***" );
     if ( NatNetVersion < mocap_optitrack::Version ( "3.0" ) ) {
         utilities::read_and_seek ( msgBufferIter, dataFrame->latency );
-        DSA_DEBUG ( "Software latency : %3.3f", dataFrame->latency );
+        MOCAP_NATNET_INFO ( "Software latency : %3.3f", dataFrame->latency );
     }
 
     // timecode
@@ -411,21 +415,21 @@ void DataFrameMessage::deserialize (
         utilities::read_and_seek ( msgBufferIter, fTimestamp );
         timestamp = ( double ) fTimestamp;
     }
-    DSA_DEBUG ( "Timestamp: %3.3f", timestamp );
+    MOCAP_NATNET_INFO ( "Timestamp: %3.3f", timestamp );
 
     // high res timestamps (version 3.0 and later)
     if ( NatNetVersion >= mocap_optitrack::Version ( "3.0" ) ) {
         uint64_t cameraMidExposureTimestamp = 0;
         utilities::read_and_seek ( msgBufferIter, cameraMidExposureTimestamp );
-        DSA_DEBUG ( "Mid-exposure timestamp: %" PRIu64 "", cameraMidExposureTimestamp );
+        MOCAP_NATNET_INFO ( "Mid-exposure timestamp: %" PRIu64 "", cameraMidExposureTimestamp );
 
         uint64_t cameraDataReceivedTimestamp = 0;
         utilities::read_and_seek ( msgBufferIter, cameraDataReceivedTimestamp );
-        DSA_DEBUG ( "Camera data received timestamp: %" PRIu64 "", cameraDataReceivedTimestamp );
+        MOCAP_NATNET_INFO ( "Camera data received timestamp: %" PRIu64 "", cameraDataReceivedTimestamp );
 
         uint64_t transmitTimestamp = 0;
         utilities::read_and_seek ( msgBufferIter, transmitTimestamp );
-        DSA_DEBUG ( "Transmit timestamp: %" PRIu64 "", transmitTimestamp );
+        MOCAP_NATNET_INFO ( "Transmit timestamp: %" PRIu64 "", transmitTimestamp );
     }
 
     // frame params
@@ -439,7 +443,7 @@ void DataFrameMessage::deserialize (
     // end of data tag
     int eod = 0;
     utilities::read_and_seek ( msgBufferIter, eod );
-    DSA_DEBUG ( "=== END DATA FRAME ===" );
+    MOCAP_NATNET_INFO ( "=== END DATA FRAME ===" );
 }
 
 
@@ -449,8 +453,8 @@ void MessageDispatcher::dispatch (
     // Grab message ID by casting to a natnet packet type
     char const* pMsgBuffer = &msgBuffer[0];
     natnet::Packet const* packet = ( natnet::Packet const* ) ( pMsgBuffer );
-    // DSA_DEBUG("Message ID: %d", packet->messageId);
-    // DSA_DEBUG("Byte count : %d", (int)msgBuffer.size());
+    // MOCAP_NATNET_INFO("Message ID: %d", packet->messageId);
+    // MOCAP_NATNET_INFO("Byte count : %d", (int)msgBuffer.size());
 
     if ( packet->messageId == natnet::MessageType::ModelDef ||
             packet->messageId == natnet::MessageType::FrameOfData ) {
@@ -458,7 +462,7 @@ void MessageDispatcher::dispatch (
             DataFrameMessage msg;
             msg.deserialize ( msgBuffer, dataModel );
         } else {
-            DSA_WARN ( "Client has not received server info request. Parsing data message aborted." );
+            MOCAP_NATNET_WARN ( "Client has not received server info request. Parsing data message aborted." );
         }
         return;
     }
@@ -466,15 +470,13 @@ void MessageDispatcher::dispatch (
     if ( packet->messageId == natnet::MessageType::ServerInfo ) {
         natnet::ServerInfoMessage msg;
         msg.deserialize ( msgBuffer, dataModel );
-        DSA_INFO_ONCE ( "NATNet Version : %s",
-                        dataModel->getNatNetVersion().getVersionString().c_str() );
-        DSA_INFO_ONCE ( "Server Version : %s",
-                        dataModel->getServerVersion().getVersionString().c_str() );
+        MOCAP_NATNET_INFO ( "NATNet Version : %s",  dataModel->getNatNetVersion().getVersionString().c_str() );
+        MOCAP_NATNET_INFO ( "Server Version : %s",  dataModel->getServerVersion().getVersionString().c_str() );
         return;
     }
 
     if ( packet->messageId == natnet::MessageType::UnrecognizedRequest ) {
-        DSA_WARN ( "Received unrecognized request" );
+        MOCAP_NATNET_WARN ( "Received unrecognized request" );
     }
 }
 

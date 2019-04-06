@@ -10,7 +10,7 @@ This is a simple program based on the
  - Data Port: 9000
  - Multicast Interface: IP of Client
 ### NatNet (client)
-The settings are currently hardcoded in mocap_config.h
+The settings are currently hardcoded in mocap_optitrack/data_model.h
  - Command Port: 1510
  - Data Port: 9000
  - Multicast Ip Address: 224.0.0.1
