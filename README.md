@@ -1,5 +1,12 @@
-# Optitrack
-This is a simple program based on the 
+# UDP Motion Capture Demo for Optitrack Motive NatNet messages
+This demo is able capture NatNet messages and outputs the containing rigid objects to the bash.
+### Tested
+At the moment is is only tested with 
+- Motive 1.10.1.
+
+## Source
+This is a simple program based on the mocap lib (https://github.com/clearpathrobotics/mocap_optitrack.git)
+## 
 ## Setup
 ### Motive (server)
 - View -> Data Streaming
