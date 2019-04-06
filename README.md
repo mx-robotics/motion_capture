@@ -4,9 +4,10 @@ This demo is able capture NatNet messages and outputs the containing rigid objec
 At the moment is is only tested with 
 - Motive 1.10.1.
 
-## Source
-This is a simple program based on the mocap lib (https://github.com/clearpathrobotics/mocap_optitrack.git)
-## 
+## Source / Thanks 
+The code is based on the mocap lib (https://github.com/clearpathrobotics/mocap_optitrack.git)
+Thanks to all authores
+ 
 ## Setup
 ### Motive (server)
 - View -> Data Streaming
