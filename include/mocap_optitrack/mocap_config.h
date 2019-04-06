@@ -50,7 +50,7 @@ class ServerDescription
     ServerDescription() 
     : commandPort(1510)
     , dataPort(9000)
-    , multicastIpAddress("224.0.0.1")
+    , multicastIpAddress("192.168.10.81")
     {}
     
   struct Default
