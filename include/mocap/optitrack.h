@@ -28,66 +28,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __MOCAP_SOCKET_H__
-#define __MOCAP_SOCKET_H__
+#ifndef __MOCAP_OPTITRACK_H__
+#define __MOCAP_OPTITRACK_H__
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <string>
-#include <arpa/inet.h>
-#include <stdexcept>
+#include <mocap/data_model.h>
 
-
-namespace mocap {
-/// \brief Exception class thrown by socket classes in this file.
-class SocketException : public std::runtime_error
+namespace mocap
 {
-  public:
-   
-    /// \brief Constructor
-    /// \param description Error message
-    SocketException ( std::string description ) : std::runtime_error( description ) {}
+
+class UdpMulticastSocket;
+class DataModel;
+
+/// \brief The data model for this node
+class OptiTrack 
+{
+public:
+    OptiTrack();
+
+
+private:
     
-    ~SocketException () throw() {}
+    std::shared_ptr<mocap::ServerDescription> serverDescription;
+    std::shared_ptr<mocap::DataModel> dataModel;
+    std::unique_ptr<mocap::UdpMulticastSocket> multicastClientSocketPtr;
 };
 
-/// \brief Allows to retrieve data from a UDP multicast group
-class UdpMulticastSocket
-{
-  public:
-    
-    /// \brief Maximum number of bytse that can be read at a time
-    static const int MAXRECV = 3000;
-
-    /// Creates a socket and joins the multicast group with the given address
-    UdpMulticastSocket( const int local_port, const std::string multicast_ip = "224.0.0.1" );
-    
-    ///
-    ~UdpMulticastSocket();
-    
-    /// \brief Retrieve data from multicast group.
-    /// \return The number of bytes received or -1 if no data is available
-    ///
-    /// This call is non-blocking.
-    int recv();
-
-    /// \brief Returns a pointer to the internal buffer, holding the received data.
-    ///
-    /// The buffer size may be obtained from MAXRECV.
-    const char* getBuffer() { return &buf[0]; }
-
-    int send(const char* buf, unsigned int sz, int port);
-
-  private:
-
-    int m_socket;
-    sockaddr_in m_local_addr;
-    sockaddr_in HostAddr;
-    bool remote_ip_exist;
-    char buf [ MAXRECV + 1 ];
-};
 }
-#endif /*__MOCAP_SOCKET_H__*/
+
+#endif

@@ -39,14 +39,14 @@ int main ( int argc, char **argv ) {
 
     std::cout << "Hello, world!" << std::endl;
 
-    mocap_optitrack::ServerDescription serverDescription;
+    mocap::ServerDescription serverDescription;
 
-    mocap_optitrack::DataModel dataModel;
-    std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
+    mocap::DataModel dataModel;
+    std::unique_ptr<mocap::UdpMulticastSocket> multicastClientSocketPtr;
 
 
     // Create socket
-    multicastClientSocketPtr.reset ( new UdpMulticastSocket ( serverDescription.dataPort, serverDescription.multicastIpAddress ) );
+    multicastClientSocketPtr.reset ( new mocap::UdpMulticastSocket ( serverDescription.dataPort, serverDescription.multicastIpAddress ) );
 
     if ( !serverDescription.version.empty() ) {
         dataModel.setVersions ( &serverDescription.version[0], &serverDescription.version[0] );
@@ -55,8 +55,8 @@ int main ( int argc, char **argv ) {
     // Need verion information from the server to properly decode any of their packets.
     // If we have not recieved that yet, send another request.
     while ( !dataModel.hasServerInfo() ) {
-        natnet::ConnectionRequestMessage connectionRequestMsg;
-        natnet::MessageBuffer connectionRequestMsgBuffer;
+        mocap::natnet::ConnectionRequestMessage connectionRequestMsg;
+        mocap::natnet::MessageBuffer connectionRequestMsgBuffer;
         connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
 
         int ret = multicastClientSocketPtr->send ( &connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), serverDescription.commandPort );
@@ -68,8 +68,8 @@ int main ( int argc, char **argv ) {
             const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
 
             // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
-            natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
+            mocap::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            mocap::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
 
             usleep ( 10 );
         }
@@ -86,8 +86,8 @@ int main ( int argc, char **argv ) {
             const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
 
             // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
-            natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
+            mocap::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            mocap::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
         }
     }
 

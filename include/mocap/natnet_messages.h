@@ -27,13 +27,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
-#define __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
+#ifndef __MOCAP_NATNET_MESSAGES_H__
+#define __MOCAP_NATNET_MESSAGES_H__
 
 #include <vector>
 #include <mocap/data_model.h>
 
 
+namespace mocap
+{
 namespace natnet
 {
     static const unsigned int NATNET_MAX_NAMELENGTH = 256;
@@ -81,35 +83,36 @@ namespace natnet
 
     struct MessageInterface
     {
-        virtual void serialize(MessageBuffer&, mocap_optitrack::DataModel const*) {};
-        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*) {};
+        virtual void serialize(MessageBuffer&, mocap::DataModel const*) {};
+        virtual void deserialize(MessageBuffer const&, mocap::DataModel*) {};
     };
 
     struct ConnectionRequestMessage : public MessageInterface
     {
-        virtual void serialize(MessageBuffer& msgBuffer, mocap_optitrack::DataModel const*);
+        virtual void serialize(MessageBuffer& msgBuffer, mocap::DataModel const*);
     };
 
     struct ServerInfoMessage : public MessageInterface
     {
-        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
+        virtual void deserialize(MessageBuffer const&, mocap::DataModel*);
     };
 
     class DataFrameMessage : public MessageInterface
     {
         struct RigidBodyMessagePart
         {
-            void deserialize(MessageBuffer::const_iterator&,  mocap_optitrack::RigidBody&, mocap_optitrack::Version const&);
+            void deserialize(MessageBuffer::const_iterator&,  mocap::RigidBody&, mocap::Version const&);
         };
 
     public:
-        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
+        virtual void deserialize(MessageBuffer const&, mocap::DataModel*);
     };
 
     struct MessageDispatcher
     {
-        static void dispatch(MessageBuffer const&, mocap_optitrack::DataModel*);
+        static void dispatch(MessageBuffer const&, mocap::DataModel*);
     };
+}
 }
 
 #endif

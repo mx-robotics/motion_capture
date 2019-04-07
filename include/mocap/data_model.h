@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 
-namespace mocap_optitrack
+namespace mocap
 {
 
 /// \brief Server communication info

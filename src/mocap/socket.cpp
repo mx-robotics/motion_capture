@@ -40,6 +40,7 @@
 
 #define MOCAP_OPTITRACK_SOCKET_INFO(...) printf(__VA_ARGS__); printf("\n")
 
+namespace mocap {
 UdpMulticastSocket::UdpMulticastSocket ( const int local_port, const std::string multicast_ip ) {
     remote_ip_exist = false;
 
@@ -172,4 +173,5 @@ int UdpMulticastSocket::send ( const char* buf, unsigned int sz, int port ) {
     HostAddr.sin_family = AF_INET;
     HostAddr.sin_port = htons ( port );
     return sendto ( m_socket, buf, sz, 0, ( sockaddr* ) &HostAddr, sizeof ( HostAddr ) );
+}
 }

@@ -32,7 +32,7 @@
 
 #include <sstream>
 
-namespace mocap_optitrack {
+namespace mocap {
 
 RigidBody::RigidBody() :
     isTrackingValid ( false ) {
