@@ -92,9 +92,7 @@ void stringify_timecode ( unsigned int inTimecode, unsigned int inTimecodeSubfra
 } // namespace utilities
 
 
-void ConnectionRequestMessage::serialize (
-    MessageBuffer& msgBuffer,
-    mocap::DataModel const* ) {
+void ConnectionRequestMessage::serialize ( MessageBuffer& msgBuffer, mocap::DataModel const* ) {
     natnet::Packet pkt;
     pkt.messageId = natnet::MessageType::Connect;
     pkt.numDataBytes = 0;
@@ -106,9 +104,7 @@ void ConnectionRequestMessage::serialize (
 }
 
 
-void ServerInfoMessage::deserialize (
-    MessageBuffer const& msgBuffer,
-    mocap::DataModel* dataModel ) {
+void ServerInfoMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::DataModel* dataModel ) {
     char const* pBuffer = &msgBuffer[0];
     natnet::Packet const* packet = ( natnet::Packet const* ) pBuffer;
 
@@ -133,13 +129,13 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
 
     MOCAP_NATNET_INFO ( "  Rigid body ID: %d", rigidBody.bodyId );
     MOCAP_NATNET_INFO ( "    Pos: [%3.2f,%3.2f,%3.2f], Ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
-                rigidBody.pose.position.x,
-                rigidBody.pose.position.y,
-                rigidBody.pose.position.z,
-                rigidBody.pose.orientation.x,
-                rigidBody.pose.orientation.y,
-                rigidBody.pose.orientation.z,
-                rigidBody.pose.orientation.w );
+                        rigidBody.pose.position.x,
+                        rigidBody.pose.position.y,
+                        rigidBody.pose.position.z,
+                        rigidBody.pose.orientation.x,
+                        rigidBody.pose.orientation.y,
+                        rigidBody.pose.orientation.z,
+                        rigidBody.pose.orientation.w );
 
     // NatNet version 2.0 and later
     if ( ( true ) && ( natNetVersion >= mocap::Version ( "2.0" ) ) ) {
@@ -155,15 +151,13 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
         utilities::read_and_seek ( msgBufferIter, params );
         rigidBody.isTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
         MOCAP_NATNET_INFO ( "    Successfully tracked in this frame: %s",
-                    ( rigidBody.isTrackingValid ? "YES" : "NO" ) );
+                            ( rigidBody.isTrackingValid ? "YES" : "NO" ) );
     }
     utilities::seek ( msgBufferIter, sizeof ( float ) );
 }
 
 
-void DataFrameMessage::deserialize (
-    MessageBuffer const& msgBuffer,
-    mocap::DataModel* dataModel ) {
+void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::DataModel* dataModel ) {
     // Get iterator to beginning of buffer and skip the header
     MessageBuffer::const_iterator msgBufferIter = msgBuffer.begin();
     utilities::seek ( msgBufferIter, 4 ); // Skip the header (4 bytes)
@@ -205,7 +199,7 @@ void DataFrameMessage::deserialize (
             // read marker positions
             utilities::read_and_seek ( msgBufferIter, marker );
             MOCAP_NATNET_INFO ( "    Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
-                        jcnt++, marker.x, marker.y, marker.z );
+                                jcnt++, marker.x, marker.y, marker.z );
         }
     }
 
@@ -222,7 +216,7 @@ void DataFrameMessage::deserialize (
         // read positions of 'other' markers
         utilities::read_and_seek ( msgBufferIter, marker );
         MOCAP_NATNET_INFO ( "  Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
-                    icnt++, marker.x, marker.y, marker.z );
+                            icnt++, marker.x, marker.y, marker.z );
         // Deprecated
     }
 
@@ -313,7 +307,7 @@ void DataFrameMessage::deserialize (
 
             MOCAP_NATNET_INFO ( "  MarkerID: %d, ModelID: %d", markerId, modelId );
             MOCAP_NATNET_INFO ( "    Pos: [%3.2f,%3.2f,%3.2f]",
-                        marker.x, marker.y, marker.z );
+                                marker.x, marker.y, marker.z );
             MOCAP_NATNET_INFO ( "    Size: %3.2f", size );
 
             // NatNet version 3.0 and later
@@ -448,9 +442,7 @@ void DataFrameMessage::deserialize (
 }
 
 
-void MessageDispatcher::dispatch (
-    MessageBuffer const& msgBuffer,
-    mocap::DataModel* dataModel ) {
+void MessageDispatcher::dispatch ( MessageBuffer const& msgBuffer, mocap::DataModel* dataModel ) {
     // Grab message ID by casting to a natnet packet type
     char const* pMsgBuffer = &msgBuffer[0];
     natnet::Packet const* packet = ( natnet::Packet const* ) ( pMsgBuffer );

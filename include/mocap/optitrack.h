@@ -31,6 +31,9 @@
 #ifndef __MOCAP_OPTITRACK_H__
 #define __MOCAP_OPTITRACK_H__
 
+#include <string>
+#include <vector>
+#include <memory>
 #include <mocap/data_model.h>
 
 namespace mocap
@@ -46,11 +49,12 @@ public:
     OptiTrack();
 
 
+    bool init (int commandPort = 1510,  int dataPort = 9000, const std::string &multicastIpAddress = "224.0.0.1"); 
+    bool receive (); 
 private:
-    
     std::shared_ptr<mocap::ServerDescription> serverDescription;
     std::shared_ptr<mocap::DataModel> dataModel;
-    std::unique_ptr<mocap::UdpMulticastSocket> multicastClientSocketPtr;
+    std::shared_ptr<mocap::UdpMulticastSocket> multicastClientSocketPtr;
 };
 
 }

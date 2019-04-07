@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 
-namespace mocap
+namespace mocap 
 {
 
 /// \brief Server communication info
@@ -46,6 +46,12 @@ class ServerDescription
     : commandPort(1510)
     , dataPort(9000)
     , multicastIpAddress("224.0.0.1")
+    {}
+    
+    ServerDescription(int commandPort, int dataPort, std::string multicastIpAddress) 
+    : commandPort(commandPort)
+    , dataPort(dataPort)
+    , multicastIpAddress(multicastIpAddress)
     {}
     
   struct Default

@@ -36,9 +36,63 @@
 #include <mocap/natnet_messages.h>
 #include <mocap/optitrack.h>
 
+#define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
+
 namespace mocap {
-    
-OptiTrack::OptiTrack(){
+
+OptiTrack::OptiTrack() {
 }
 
+bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multicastIpAddress ) {
+
+    serverDescription.reset(new mocap::ServerDescription(commandPort, dataPort, multicastIpAddress));
+    dataModel.reset( new mocap::DataModel);
+    
+     
+    // Create socket
+    multicastClientSocketPtr.reset ( new mocap::UdpMulticastSocket ( serverDescription->dataPort, serverDescription->multicastIpAddress ) );
+
+    if ( !serverDescription->version.empty() ) {
+        dataModel->setVersions ( &serverDescription->version[0], &serverDescription->version[0] );
+    }
+
+    // Need verion information from the server to properly decode any of their packets.
+    // If we have not recieved that yet, send another request.
+    while ( !dataModel->hasServerInfo() ) {
+        mocap::natnet::ConnectionRequestMessage connectionRequestMsg;
+        mocap::natnet::MessageBuffer connectionRequestMsgBuffer;
+        connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
+
+        int ret = multicastClientSocketPtr->send ( &connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), serverDescription->commandPort );
+
+
+        int numBytesReceived = multicastClientSocketPtr->recv();
+        if ( numBytesReceived > 0 ) {
+            // Grab latest message buffer
+            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
+
+            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
+            mocap::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            mocap::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
+
+            usleep ( 10 );
+        }
+    }
+}
+
+
+bool OptiTrack::receive (){
+        // Get data from mocap server
+        int numBytesReceived = multicastClientSocketPtr->recv();
+        if ( numBytesReceived > 0 ) {
+            PRINT_INFO ( "package received" );
+            // Grab latest message buffer
+            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
+
+            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
+            mocap::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            mocap::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
+        }
+    
+}
 }
