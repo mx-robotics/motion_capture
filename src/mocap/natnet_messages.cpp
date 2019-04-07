@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "natnet/natnet_messages.h"
+#include "mocap/natnet_messages.h"
 
 #include <cstring>
 #include <cinttypes>

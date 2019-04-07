@@ -29,9 +29,9 @@
 
 #include <iostream>
 #include <memory>
-#include <mocap_optitrack/data_model.h>
-#include <mocap_optitrack/socket.h>
-#include <natnet/natnet_messages.h>
+#include <mocap/data_model.h>
+#include <mocap/socket.h>
+#include <mocap/natnet_messages.h>
 
 #define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
 

@@ -28,7 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "mocap_optitrack/socket.h"
+#include "mocap/socket.h"
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>

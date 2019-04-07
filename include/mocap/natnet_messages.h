@@ -31,7 +31,7 @@
 #define __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
 
 #include <vector>
-#include <mocap_optitrack/data_model.h>
+#include <mocap/data_model.h>
 
 
 namespace natnet
