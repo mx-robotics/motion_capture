@@ -39,8 +39,8 @@
 namespace motion_capture
 {
 
-class UdpMulticastSocket;
 class DataModel;
+class UDPHdl;
 
 /// \brief The data model for this node
 class OptiTrack 
@@ -54,7 +54,7 @@ public:
 private:
     std::shared_ptr<motion_capture::ServerDescription> serverDescription;
     std::shared_ptr<motion_capture::DataModel> dataModel;
-    std::shared_ptr<motion_capture::UdpMulticastSocket> multicastClientSocketPtr;
+    std::shared_ptr<motion_capture::UDPHdl> udpHdl;
 };
 
 }

@@ -32,9 +32,9 @@
 #include <iostream>
 #include <memory>
 #include <motion_capture/data_model.h>
-#include <motion_capture/socket.h>
 #include <motion_capture/natnet_messages.h>
 #include <motion_capture/optitrack.h>
+#include <motion_capture/udphdl.h>
 
 #define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
 
@@ -50,7 +50,9 @@ bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multic
     
      
     // Create socket
-    multicastClientSocketPtr.reset ( new motion_capture::UdpMulticastSocket ( serverDescription->dataPort, serverDescription->multicastIpAddress ) );
+    udpHdl.reset(new motion_capture::UDPHdl);
+    udpHdl->initBidirektional(serverDescription->multicastIpAddress, serverDescription->dataPort, serverDescription->commandPort, 10);
+    udpHdl->runThread();
 
     if ( !serverDescription->version.empty() ) {
         dataModel->setVersions ( &serverDescription->version[0], &serverDescription->version[0] );
@@ -58,23 +60,28 @@ bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multic
 
     // Need verion information from the server to properly decode any of their packets.
     // If we have not recieved that yet, send another request.
+    
+    motion_capture::natnet::ConnectionRequestMessage connectionRequestMsg;
+    motion_capture::natnet::MessageBuffer connectionRequestMsgBuffer;
+    connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
+    
     while ( !dataModel->hasServerInfo() ) {
-        motion_capture::natnet::ConnectionRequestMessage connectionRequestMsg;
-        motion_capture::natnet::MessageBuffer connectionRequestMsgBuffer;
-        connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
 
-        int ret = multicastClientSocketPtr->send ( &connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), serverDescription->commandPort );
+        udpHdl->send(&connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size());
 
-
-        int numBytesReceived = multicastClientSocketPtr->recv();
-        if ( numBytesReceived > 0 ) {
+        while ( udpHdl->nrOfQueuedMsg() > 0 ) {
             // Grab latest message buffer
-            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
-
-            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            motion_capture::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
-            motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
-
+            motion_capture::natnet::MessageBuffer msgBuffer; 
+            if(udpHdl->deque(msgBuffer) > 0) {
+                PRINT_INFO ( "msgBuffer received: %zu byte", msgBuffer.size() );
+                
+                motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
+                
+                
+                if(msgBuffer.size() == 4){                
+                    PRINT_INFO ( "received:  %d, %d, %d, %d\n", (uint8_t) msgBuffer[0], (uint8_t) msgBuffer[1], (uint8_t) msgBuffer[2], (uint8_t) msgBuffer[3]);
+                }
+            }
             usleep ( 10 );
         }
     }
@@ -82,15 +89,14 @@ bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multic
 
 
 bool OptiTrack::receive (){
-        // Get data from mocap server
-        int numBytesReceived = multicastClientSocketPtr->recv();
-        if ( numBytesReceived > 0 ) {
+    
+        int nr_of_pkgs = udpHdl->nrOfQueuedMsg();
+    
+        while ( udpHdl->nrOfQueuedMsg() > 0 ) {
             PRINT_INFO ( "package received" );
-            // Grab latest message buffer
-            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
-
-            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            motion_capture::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            motion_capture::natnet::MessageBuffer msgBuffer;
+            udpHdl->deque(msgBuffer);
+            
             motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
         }
     
