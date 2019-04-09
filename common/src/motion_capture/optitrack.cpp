@@ -31,26 +31,26 @@
 
 #include <iostream>
 #include <memory>
-#include <mocap/data_model.h>
-#include <mocap/socket.h>
-#include <mocap/natnet_messages.h>
-#include <mocap/optitrack.h>
+#include <motion_capture/data_model.h>
+#include <motion_capture/socket.h>
+#include <motion_capture/natnet_messages.h>
+#include <motion_capture/optitrack.h>
 
 #define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
 
-namespace mocap {
+namespace motion_capture {
 
 OptiTrack::OptiTrack() {
 }
 
 bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multicastIpAddress ) {
 
-    serverDescription.reset(new mocap::ServerDescription(commandPort, dataPort, multicastIpAddress));
-    dataModel.reset( new mocap::DataModel);
+    serverDescription.reset(new motion_capture::ServerDescription(commandPort, dataPort, multicastIpAddress));
+    dataModel.reset( new motion_capture::DataModel);
     
      
     // Create socket
-    multicastClientSocketPtr.reset ( new mocap::UdpMulticastSocket ( serverDescription->dataPort, serverDescription->multicastIpAddress ) );
+    multicastClientSocketPtr.reset ( new motion_capture::UdpMulticastSocket ( serverDescription->dataPort, serverDescription->multicastIpAddress ) );
 
     if ( !serverDescription->version.empty() ) {
         dataModel->setVersions ( &serverDescription->version[0], &serverDescription->version[0] );
@@ -59,8 +59,8 @@ bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multic
     // Need verion information from the server to properly decode any of their packets.
     // If we have not recieved that yet, send another request.
     while ( !dataModel->hasServerInfo() ) {
-        mocap::natnet::ConnectionRequestMessage connectionRequestMsg;
-        mocap::natnet::MessageBuffer connectionRequestMsgBuffer;
+        motion_capture::natnet::ConnectionRequestMessage connectionRequestMsg;
+        motion_capture::natnet::MessageBuffer connectionRequestMsgBuffer;
         connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
 
         int ret = multicastClientSocketPtr->send ( &connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), serverDescription->commandPort );
@@ -72,8 +72,8 @@ bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multic
             const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
 
             // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            mocap::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
-            mocap::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
+            motion_capture::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
 
             usleep ( 10 );
         }
@@ -90,8 +90,8 @@ bool OptiTrack::receive (){
             const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
 
             // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            mocap::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
-            mocap::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
+            motion_capture::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+            motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
         }
     
 }

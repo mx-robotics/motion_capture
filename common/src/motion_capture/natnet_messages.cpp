@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "mocap/natnet_messages.h"
+#include "motion_capture/natnet_messages.h"
 
 #include <cstring>
 #include <cinttypes>
@@ -36,7 +36,7 @@
 #define MOCAP_NATNET_INFO(...) printf(__VA_ARGS__); printf("\n")
 #define MOCAP_NATNET_WARN(...) printf(__VA_ARGS__); printf("\n")
 
-namespace mocap {
+namespace motion_capture {
 namespace natnet {
 
 namespace utilities {
@@ -92,7 +92,7 @@ void stringify_timecode ( unsigned int inTimecode, unsigned int inTimecodeSubfra
 } // namespace utilities
 
 
-void ConnectionRequestMessage::serialize ( MessageBuffer& msgBuffer, mocap::DataModel const* ) {
+void ConnectionRequestMessage::serialize ( MessageBuffer& msgBuffer, motion_capture::DataModel const* ) {
     natnet::Packet pkt;
     pkt.messageId = natnet::MessageType::Connect;
     pkt.numDataBytes = 0;
@@ -104,7 +104,7 @@ void ConnectionRequestMessage::serialize ( MessageBuffer& msgBuffer, mocap::Data
 }
 
 
-void ServerInfoMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::DataModel* dataModel ) {
+void ServerInfoMessage::deserialize ( MessageBuffer const& msgBuffer,  motion_capture::DataModel* dataModel ) {
     char const* pBuffer = &msgBuffer[0];
     natnet::Packet const* packet = ( natnet::Packet const* ) pBuffer;
 
@@ -121,8 +121,8 @@ void ServerInfoMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Da
 
 void DataFrameMessage::RigidBodyMessagePart::deserialize (
     MessageBuffer::const_iterator& msgBufferIter,
-    mocap::RigidBody& rigidBody,
-    mocap::Version const& natNetVersion ) {
+    motion_capture::RigidBody& rigidBody,
+    motion_capture::Version const& natNetVersion ) {
     // Read id, position and orientation of each rigid body
     utilities::read_and_seek ( msgBufferIter, rigidBody.bodyId );
     utilities::read_and_seek ( msgBufferIter, rigidBody.pose );
@@ -138,14 +138,14 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
                         rigidBody.pose.orientation.w );
 
     // NatNet version 2.0 and later
-    if ( ( true ) && ( natNetVersion >= mocap::Version ( "2.0" ) ) ) {
+    if ( ( true ) && ( natNetVersion >= motion_capture::Version ( "2.0" ) ) ) {
         // Mean marker error
         utilities::read_and_seek ( msgBufferIter, rigidBody.meanMarkerError );
         MOCAP_NATNET_INFO ( "    Mean marker error: %3.2f", rigidBody.meanMarkerError );
     }
 
     // NatNet version 2.6 and later
-    if ( ( true ) && ( natNetVersion >= mocap::Version ( "2.6" ) ) ) {
+    if ( ( true ) && ( natNetVersion >= motion_capture::Version ( "2.6" ) ) ) {
         // params
         short params = 0;
         utilities::read_and_seek ( msgBufferIter, params );
@@ -157,7 +157,7 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize (
 }
 
 
-void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::DataModel* dataModel ) {
+void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  motion_capture::DataModel* dataModel ) {
     // Get iterator to beginning of buffer and skip the header
     MessageBuffer::const_iterator msgBufferIter = msgBuffer.begin();
     utilities::seek ( msgBufferIter, 4 ); // Skip the header (4 bytes)
@@ -169,8 +169,8 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
 
     // Here on out its conveinent to get a pointer directly
     // to the ModelFrame object as well as the NatNetVersion
-    mocap::ModelFrame* dataFrame = & ( dataModel->dataFrame );
-    mocap::Version const& NatNetVersion = dataModel->getNatNetVersion();
+    motion_capture::ModelFrame* dataFrame = & ( dataModel->dataFrame );
+    motion_capture::Version const& NatNetVersion = dataModel->getNatNetVersion();
 
     // Next 4 bytes is the number of data sets (markersets, rigidbodies, etc)
     int numMarkerSets = 0;
@@ -236,7 +236,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
     // Skeletons (NatNet version 2.1 and later)
     // TODO: skeletons not currently included in data model. Parsing
     //       is happening.. but need to copy into a model.
-    if ( ( false ) & ( NatNetVersion >= mocap::Version ( "2.1" ) ) ) {
+    if ( ( false ) & ( NatNetVersion >= motion_capture::Version ( "2.1" ) ) ) {
         MOCAP_NATNET_INFO ( "*** SKELETONS ***" );
         int numSkeletons = 0;
         utilities::read_and_seek ( msgBufferIter, numSkeletons );
@@ -256,7 +256,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
 
             // Loop through rigid bodies (bones) in skeleton
             for ( int j=0; j < numRigidBodies; j++ ) {
-                mocap::RigidBody rigidBody;
+                motion_capture::RigidBody rigidBody;
                 DataFrameMessage::RigidBodyMessagePart rigidBodyMessagePart;
                 rigidBodyMessagePart.deserialize ( msgBufferIter, rigidBody, NatNetVersion );
             } // next rigid body
@@ -266,7 +266,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
     // Labeled markers (NatNet version 2.3 and later)
     // TODO: like skeletons, labeled markers are not accounted for
     //       in the data model. They are being parsed but not recorded.
-    if ( NatNetVersion >= mocap::Version ( "2.3" ) ) {
+    if ( NatNetVersion >= motion_capture::Version ( "2.3" ) ) {
         MOCAP_NATNET_INFO ( "*** LABELED MARKERS ***" );
         int numLabeledMarkers = 0;
         utilities::read_and_seek ( msgBufferIter, numLabeledMarkers );
@@ -279,13 +279,13 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
             int modelId, markerId;
             utilities::decode_marker_id ( id, modelId, markerId );
 
-            mocap::Marker marker;
+            motion_capture::Marker marker;
             utilities::read_and_seek ( msgBufferIter, marker );
 
             float size;
             utilities::read_and_seek ( msgBufferIter, size );
 
-            if ( NatNetVersion >= mocap::Version ( "2.6" ) ) {
+            if ( NatNetVersion >= motion_capture::Version ( "2.6" ) ) {
                 // marker params
                 short params = 0;
                 utilities::read_and_seek ( msgBufferIter, params );
@@ -295,7 +295,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
                 bool bPCSolved = ( params & 0x02 ) != 0;
                 // position provided by model solve
                 bool bModelSolved = ( params & 0x04 ) != 0;
-                if ( NatNetVersion >= mocap::Version ( "3.0" ) ) {
+                if ( NatNetVersion >= motion_capture::Version ( "3.0" ) ) {
                     // marker has an associated model
                     bool bHasModel = ( params & 0x08 ) != 0;
                     // marker is an unlabeled marker
@@ -311,7 +311,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
             MOCAP_NATNET_INFO ( "    Size: %3.2f", size );
 
             // NatNet version 3.0 and later
-            if ( NatNetVersion >= mocap::Version ( "3.0" ) ) {
+            if ( NatNetVersion >= motion_capture::Version ( "3.0" ) ) {
                 // Marker residual
                 float residual = 0.0f;
                 utilities::read_and_seek ( msgBufferIter, residual );
@@ -322,7 +322,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
 
     // Force Plate data (NatNet version 2.9 and later)
     // TODO: This is definitely not in the data model..
-    if ( NatNetVersion >= mocap::Version ( "2.9" ) ) {
+    if ( NatNetVersion >= motion_capture::Version ( "2.9" ) ) {
         MOCAP_NATNET_INFO ( "*** FORCE PLATES ***" );
         int numForcePlates;
         utilities::read_and_seek ( msgBufferIter, numForcePlates );
@@ -354,7 +354,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
 
     // Device data (NatNet version 3.0 and later)
     // TODO: Also not in the data model..
-    if ( NatNetVersion >= mocap::Version ( "3.0" ) ) {
+    if ( NatNetVersion >= motion_capture::Version ( "3.0" ) ) {
         MOCAP_NATNET_INFO ( "*** DEVICE DATA ***" );
         int numDevices;
         utilities::read_and_seek ( msgBufferIter, numDevices );
@@ -386,7 +386,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
 
     // software latency (removed in version 3.0)
     MOCAP_NATNET_INFO ( "*** DIAGNOSTICS ***" );
-    if ( NatNetVersion < mocap::Version ( "3.0" ) ) {
+    if ( NatNetVersion < motion_capture::Version ( "3.0" ) ) {
         utilities::read_and_seek ( msgBufferIter, dataFrame->latency );
         MOCAP_NATNET_INFO ( "Software latency : %3.3f", dataFrame->latency );
     }
@@ -403,7 +403,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
     double timestamp = 0.0f;
 
     // NatNet version 2.7 and later - increased from single to double precision
-    if ( NatNetVersion >= mocap::Version ( "2.7" ) ) {
+    if ( NatNetVersion >= motion_capture::Version ( "2.7" ) ) {
         utilities::read_and_seek ( msgBufferIter, timestamp );
     } else {
         float fTimestamp = 0.0f;
@@ -413,7 +413,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
     MOCAP_NATNET_INFO ( "Timestamp: %3.3f", timestamp );
 
     // high res timestamps (version 3.0 and later)
-    if ( NatNetVersion >= mocap::Version ( "3.0" ) ) {
+    if ( NatNetVersion >= motion_capture::Version ( "3.0" ) ) {
         uint64_t cameraMidExposureTimestamp = 0;
         utilities::read_and_seek ( msgBufferIter, cameraMidExposureTimestamp );
         MOCAP_NATNET_INFO ( "Mid-exposure timestamp: %" PRIu64 "", cameraMidExposureTimestamp );
@@ -442,7 +442,7 @@ void DataFrameMessage::deserialize ( MessageBuffer const& msgBuffer,  mocap::Dat
 }
 
 
-void MessageDispatcher::dispatch ( MessageBuffer const& msgBuffer, mocap::DataModel* dataModel ) {
+void MessageDispatcher::dispatch ( MessageBuffer const& msgBuffer, motion_capture::DataModel* dataModel ) {
     // Grab message ID by casting to a natnet packet type
     char const* pMsgBuffer = &msgBuffer[0];
     natnet::Packet const* packet = ( natnet::Packet const* ) ( pMsgBuffer );

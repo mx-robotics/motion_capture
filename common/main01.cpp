@@ -29,7 +29,7 @@
 
 #include <iostream>
 #include <memory>
-#include <mocap/optitrack.h>
+#include <motion_capture/optitrack.h>
 
 #define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
 
@@ -37,7 +37,7 @@ int main ( int argc, char **argv ) {
 
     std::cout << "Hello, world!" << std::endl;
 
-    mocap::OptiTrack optitrack;
+    motion_capture::OptiTrack optitrack;
     
     optitrack.init();
 

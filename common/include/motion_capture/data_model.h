@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 
-namespace mocap 
+namespace motion_capture
 {
 
 /// \brief Server communication info

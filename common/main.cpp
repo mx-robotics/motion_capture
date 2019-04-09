@@ -30,11 +30,13 @@
 #include <iostream>
 #include <memory>
 #include <motion_capture/data_model.h>
-#include <motion_capture/socket.h>
 #include <motion_capture/natnet_messages.h>
+#include <motion_capture/udphdl.h>
 #include <boost/program_options.hpp>
 
+
 #define PRINT_INFO(...) printf(__VA_ARGS__); printf("\n")
+
 
 struct Prarmeters {
     std::string host;
@@ -49,7 +51,7 @@ Prarmeters readArgs ( int argc, char **argv ) {
     po::options_description desc ( "Allowed Parameters" );
     desc.add_options()
     ( "help", "get this help message" )
-    ( "host,h", po::value<std::string> ( &params.host )->default_value ( "224.0.0.1" ), "host mutlicast" )
+    ( "host,h", po::value<std::string> ( &params.host )->default_value ( "192.168.10.81" ), "host mutlicast" )
     ( "dataPort,d", po::value<unsigned int> ( &params.dataPort )->default_value ( 9000 ), "optitrack data port" )
     ( "commandPort,c", po::value<unsigned int> ( &params.commandPort )->default_value ( 1510 ), "optitrack command port" );
 
@@ -71,47 +73,44 @@ Prarmeters readArgs ( int argc, char **argv ) {
 
 int main ( int argc, char **argv ) {
 
-    std::cout << "Hello, world!" << std::endl;
     Prarmeters params = readArgs ( argc, argv );
 
-    motion_capture::ServerDescription serverDescription(params.commandPort, params.dataPort, params.host);
-
     motion_capture::DataModel dataModel;
-    std::unique_ptr<motion_capture::UdpMulticastSocket> multicastClientSocketPtr;
-
-
-    // Create socket
-    multicastClientSocketPtr.reset ( new motion_capture::UdpMulticastSocket ( serverDescription.dataPort, serverDescription.multicastIpAddress ) );
-
+    motion_capture::ServerDescription serverDescription(params.commandPort, params.dataPort, params.host);
+    
+    
+    motion_capture::UDPHdl udp;
+    udp.initBidirektional(serverDescription.multicastIpAddress, serverDescription.dataPort, serverDescription.commandPort, 10);
+    
     if ( !serverDescription.version.empty() ) {
         dataModel.setVersions ( &serverDescription.version[0], &serverDescription.version[0] );
     }
-
-    // Need verion information from the server to properly decode any of their packets.
-    // If we have not recieved that yet, send another request.
-    while ( !dataModel.hasServerInfo() ) {
-        motion_capture::natnet::ConnectionRequestMessage connectionRequestMsg;
-        motion_capture::natnet::MessageBuffer sendBuffer;
-        connectionRequestMsg.serialize ( sendBuffer, NULL );
-        PRINT_INFO ( "sendBuffer:  %d, %d, %d, %d", (uint8_t) sendBuffer[0], (uint8_t) sendBuffer[1], (uint8_t) sendBuffer[2], (uint8_t) sendBuffer[3]);
     
+    motion_capture::natnet::ConnectionRequestMessage connectionRequestMsg;
+    motion_capture::natnet::MessageBuffer connectionRequestMsgBuffer;
+    connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
+    
+    PRINT_INFO ( "connectionRequestMsgBuffer:  %d, %d, %d, %d", (uint8_t) connectionRequestMsgBuffer[0], (uint8_t) connectionRequestMsgBuffer[1], (uint8_t) connectionRequestMsgBuffer[2], (uint8_t) connectionRequestMsgBuffer[3]);
+
+    udp.runThread();
+    
+    
+    while ( !dataModel.hasServerInfo() ) {
         
-        int ret = multicastClientSocketPtr->send ( &sendBuffer[0], sendBuffer.size(), serverDescription.commandPort );
 
-
-        int numBytesReceived = multicastClientSocketPtr->recv();
-        if ( numBytesReceived > 0 ) {
+        udp.send(&connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size());
+        while ( udp.nrOfQueuedMsg() > 0 ) {
             // Grab latest message buffer
-            PRINT_INFO ( "package received: %dbyte", numBytesReceived );
-            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
-
-            if(numBytesReceived == 4){                
-                PRINT_INFO ( "pMsgBuffer:  %d, %d, %d, %d\n", (uint8_t) pMsgBuffer[0], (uint8_t) pMsgBuffer[1], (uint8_t) pMsgBuffer[2], (uint8_t) pMsgBuffer[3]);
+            motion_capture::natnet::MessageBuffer msgBuffer; 
+            if(udp.deque(msgBuffer) > 0) {
+                PRINT_INFO ( "msgBuffer received: %zu byte", msgBuffer.size() );
+                motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
+                
+                
+                if(msgBuffer.size() == 4){                
+                    PRINT_INFO ( "received:  %d, %d, %d, %d\n", (uint8_t) msgBuffer[0], (uint8_t) msgBuffer[1], (uint8_t) msgBuffer[2], (uint8_t) msgBuffer[3]);
+                }
             }
-            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            motion_capture::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
-            motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
-
             usleep ( 10 );
         }
     }
@@ -119,15 +118,13 @@ int main ( int argc, char **argv ) {
     PRINT_INFO ( "Initialization complete" );
 
     while ( true ) {
-        // Get data from mocap server
-        int numBytesReceived = multicastClientSocketPtr->recv();
-        if ( numBytesReceived > 0 ) {
-            PRINT_INFO ( "package received: %dbyte", numBytesReceived );
-            // Grab latest message buffer
-            const char* pMsgBuffer = multicastClientSocketPtr->getBuffer();
-
-            // Copy char* buffer into MessageBuffer and dispatch to be deserialized
-            motion_capture::natnet::MessageBuffer msgBuffer ( pMsgBuffer, pMsgBuffer + numBytesReceived );
+        int nr_of_pkgs = udp.nrOfQueuedMsg();
+    
+        while ( udp.nrOfQueuedMsg() > 0 ) {
+            PRINT_INFO ( "package received" );
+            motion_capture::natnet::MessageBuffer msgBuffer;
+            udp.deque(msgBuffer);
+            
             motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
         }
     }

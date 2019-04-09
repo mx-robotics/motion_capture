@@ -1,3 +1,3 @@
 
-add_subdirectory(mocap)
+add_subdirectory(motion_capture)
 

@@ -28,7 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "mocap/socket.h"
+#include "motion_capture/socket.h"
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
@@ -40,7 +40,7 @@
 
 #define MOCAP_OPTITRACK_SOCKET_INFO(...) printf(__VA_ARGS__); printf("\n")
 
-namespace mocap {
+namespace motion_capture {
 UdpMulticastSocket::UdpMulticastSocket ( const int local_port, const std::string multicast_ip ) {
     remote_ip_exist = false;
 

@@ -31,10 +31,10 @@
 #define __MOCAP_NATNET_MESSAGES_H__
 
 #include <vector>
-#include <mocap/data_model.h>
+#include <motion_capture/data_model.h>
 
 
-namespace mocap
+namespace motion_capture
 {
 namespace natnet
 {
@@ -83,34 +83,34 @@ namespace natnet
 
     struct MessageInterface
     {
-        virtual void serialize(MessageBuffer&, mocap::DataModel const*) {};
-        virtual void deserialize(MessageBuffer const&, mocap::DataModel*) {};
+        virtual void serialize(MessageBuffer&, motion_capture::DataModel const*) {};
+        virtual void deserialize(MessageBuffer const&, motion_capture::DataModel*) {};
     };
 
     struct ConnectionRequestMessage : public MessageInterface
     {
-        virtual void serialize(MessageBuffer& msgBuffer, mocap::DataModel const*);
+        virtual void serialize(MessageBuffer& msgBuffer, motion_capture::DataModel const*);
     };
 
     struct ServerInfoMessage : public MessageInterface
     {
-        virtual void deserialize(MessageBuffer const&, mocap::DataModel*);
+        virtual void deserialize(MessageBuffer const&, motion_capture::DataModel*);
     };
 
     class DataFrameMessage : public MessageInterface
     {
         struct RigidBodyMessagePart
         {
-            void deserialize(MessageBuffer::const_iterator&,  mocap::RigidBody&, mocap::Version const&);
+            void deserialize(MessageBuffer::const_iterator&,  motion_capture::RigidBody&, motion_capture::Version const&);
         };
 
     public:
-        virtual void deserialize(MessageBuffer const&, mocap::DataModel*);
+        virtual void deserialize(MessageBuffer const&, motion_capture::DataModel*);
     };
 
     struct MessageDispatcher
     {
-        static void dispatch(MessageBuffer const&, mocap::DataModel*);
+        static void dispatch(MessageBuffer const&, motion_capture::DataModel*);
     };
 }
 }
