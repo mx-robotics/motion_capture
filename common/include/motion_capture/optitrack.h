@@ -31,10 +31,7 @@
 #ifndef __MOCAP_OPTITRACK_H__
 #define __MOCAP_OPTITRACK_H__
 
-#include <string>
-#include <vector>
 #include <memory>
-#include <motion_capture/data_model.h>
 
 namespace motion_capture
 {
