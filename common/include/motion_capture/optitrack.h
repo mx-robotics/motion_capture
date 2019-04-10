@@ -36,6 +36,7 @@
 namespace motion_capture
 {
 
+class ServerDescription;
 class DataModel;
 class UDPHdl;
 

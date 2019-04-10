@@ -29,9 +29,7 @@
 
 #include <iostream>
 #include <memory>
-#include <motion_capture/data_model.h>
-#include <motion_capture/natnet_messages.h>
-#include <motion_capture/udphdl.h>
+#include <motion_capture/optitrack.h>
 #include <boost/program_options.hpp>
 
 
@@ -75,58 +73,11 @@ int main ( int argc, char **argv ) {
 
     Prarmeters params = readArgs ( argc, argv );
 
-    motion_capture::DataModel dataModel;
-    motion_capture::ServerDescription serverDescription(params.commandPort, params.dataPort, params.host);
+    motion_capture::OptiTrack optitrack;
+    optitrack.init(params.commandPort, params.dataPort, params.host);
     
-    
-    motion_capture::UDPHdl udp;
-    udp.initBidirektional(serverDescription.multicastIpAddress, serverDescription.dataPort, serverDescription.commandPort, 10);
-    
-    if ( !serverDescription.version.empty() ) {
-        dataModel.setVersions ( &serverDescription.version[0], &serverDescription.version[0] );
-    }
-    
-    motion_capture::natnet::ConnectionRequestMessage connectionRequestMsg;
-    motion_capture::natnet::MessageBuffer connectionRequestMsgBuffer;
-    connectionRequestMsg.serialize ( connectionRequestMsgBuffer, NULL );
-    
-    PRINT_INFO ( "connectionRequestMsgBuffer:  %d, %d, %d, %d", (uint8_t) connectionRequestMsgBuffer[0], (uint8_t) connectionRequestMsgBuffer[1], (uint8_t) connectionRequestMsgBuffer[2], (uint8_t) connectionRequestMsgBuffer[3]);
-
-    udp.runThread();
-    
-    
-    while ( !dataModel.hasServerInfo() ) {
-        
-
-        udp.send(&connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size());
-        while ( udp.nrOfQueuedMsg() > 0 ) {
-            // Grab latest message buffer
-            motion_capture::natnet::MessageBuffer msgBuffer; 
-            if(udp.deque(msgBuffer) > 0) {
-                PRINT_INFO ( "msgBuffer received: %zu byte", msgBuffer.size() );
-                motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
-                
-                
-                if(msgBuffer.size() == 4){                
-                    PRINT_INFO ( "received:  %d, %d, %d, %d\n", (uint8_t) msgBuffer[0], (uint8_t) msgBuffer[1], (uint8_t) msgBuffer[2], (uint8_t) msgBuffer[3]);
-                }
-            }
-            usleep ( 10 );
-        }
-    }
-
-    PRINT_INFO ( "Initialization complete" );
-
     while ( true ) {
-        int nr_of_pkgs = udp.nrOfQueuedMsg();
-    
-        while ( udp.nrOfQueuedMsg() > 0 ) {
-            PRINT_INFO ( "package received" );
-            motion_capture::natnet::MessageBuffer msgBuffer;
-            udp.deque(msgBuffer);
-            
-            motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, &dataModel );
-        }
+        optitrack.receive();
     }
 
 
