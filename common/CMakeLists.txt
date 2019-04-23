@@ -17,6 +17,4 @@ endif(MOCAP_DEMOS_ENABLE)
 
 
 install(DIRECTORY include/motion_capture DESTINATION include
-        FILES_MATCHING PATTERN "data_model.h")
-install(DIRECTORY include/motion_capture DESTINATION include
-        FILES_MATCHING PATTERN "optitrack.h")
+        FILES_MATCHING PATTERN "*.h")
