@@ -6,3 +6,7 @@ add_library(motion_capture SHARED
   udphdl.cpp
 )
 
+install(TARGETS motion_capture
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib/static)

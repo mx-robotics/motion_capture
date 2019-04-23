@@ -66,14 +66,16 @@ void ModelFrame::clear() {
 ServerInfo::ServerInfo() :
     natNetVersion ( 0,0,0,0 ),
     serverVersion ( 0,0,0,0 ) {
-
 }
-
 
 DataModel::DataModel() :
     hasValidServerInfo ( false ) {
-
 }
+
+DataModel::DataModel(const ServerInfo &info):
+    hasValidServerInfo ( true ), serverInfo(info) {
+}
+
 
 void DataModel::clear() {
     dataFrame.clear();
@@ -93,6 +95,9 @@ Version const& DataModel::getServerVersion() const {
     return serverInfo.serverVersion;
 }
 
+ServerInfo const& DataModel::getServerInfo() const {
+    return serverInfo;
+}
 Version::Version() {
     setVersion ( 0, 0, 0, 0 );
 }

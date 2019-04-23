@@ -32,13 +32,20 @@
 #define __MOCAP_OPTITRACK_H__
 
 #include <memory>
+#include <vector>
 
 namespace motion_capture
 {
 
-class ServerDescription;
+
+class ServerInfo;
+using ServerInfoPtr = std::shared_ptr<motion_capture::ServerInfo>;
 class DataModel;
+using DataModelPtr = std::shared_ptr<motion_capture::DataModel>;
+class ServerDescription;
+using ServerDescriptionPtr = std::shared_ptr<motion_capture::ServerDescription>;
 class UDPHdl;
+using UDPHdlPtr = std::shared_ptr<motion_capture::UDPHdl>;
 
 /// \brief The data model for this node
 class OptiTrack 
@@ -48,11 +55,11 @@ public:
 
 
     bool init (int commandPort = 1510,  int dataPort = 9000, const std::string &multicastIpAddress = "224.0.0.1"); 
-    bool receive (); 
+    bool receive (std::vector<DataModelPtr> &data); 
 private:
-    std::shared_ptr<motion_capture::ServerDescription> serverDescription;
-    std::shared_ptr<motion_capture::DataModel> dataModel;
-    std::shared_ptr<motion_capture::UDPHdl> udpHdl;
+    ServerDescriptionPtr serverDescription;
+    ServerInfoPtr serverInfo;
+    UDPHdlPtr udpHdl;
 };
 
 }

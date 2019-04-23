@@ -45,6 +45,7 @@ OptiTrack::OptiTrack() {
 
 bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multicastIpAddress ) {
 
+    DataModelPtr dataModel;
     serverDescription.reset(new motion_capture::ServerDescription(commandPort, dataPort, multicastIpAddress));
     dataModel.reset( new motion_capture::DataModel);
     
@@ -85,19 +86,22 @@ bool OptiTrack::init ( int commandPort,  int dataPort, const std::string &multic
             usleep ( 10 );
         }
     }
+    serverInfo.reset(new motion_capture::ServerInfo(dataModel->getServerInfo()));
 }
 
 
-bool OptiTrack::receive (){
+bool OptiTrack::receive (std::vector<DataModelPtr> &data){
     
-        int nr_of_pkgs = udpHdl->nrOfQueuedMsg();
-    
+        data.clear();
         while ( udpHdl->nrOfQueuedMsg() > 0 ) {
             PRINT_INFO ( "package received" );
+            
+            DataModelPtr dataModel(new motion_capture::DataModel(*serverInfo));
             motion_capture::natnet::MessageBuffer msgBuffer;
             udpHdl->deque(msgBuffer);
             
             motion_capture::natnet::MessageDispatcher::dispatch ( msgBuffer, dataModel.get() );
+            data.push_back(dataModel);
         }
     
 }

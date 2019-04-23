@@ -76,8 +76,9 @@ int main ( int argc, char **argv ) {
     motion_capture::OptiTrack optitrack;
     optitrack.init(params.commandPort, params.dataPort, params.host);
     
+    std::vector<motion_capture::DataModelPtr> data;
     while ( true ) {
-        optitrack.receive();
+        optitrack.receive(data);
     }
 
 

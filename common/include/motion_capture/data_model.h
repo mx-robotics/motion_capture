@@ -170,6 +170,7 @@ class DataModel
 {
 public:
     DataModel();
+    DataModel(const ServerInfo &info);
 
     int frameNumber;
     ModelFrame dataFrame;
@@ -179,8 +180,8 @@ public:
     void setVersions(int* nver, int* sver);
     Version const& getNatNetVersion() const;
     Version const& getServerVersion() const;
+    ServerInfo const& getServerInfo() const;
     bool hasServerInfo() const {return hasValidServerInfo;};
-
 private:
     ServerInfo serverInfo;
     bool hasValidServerInfo;
